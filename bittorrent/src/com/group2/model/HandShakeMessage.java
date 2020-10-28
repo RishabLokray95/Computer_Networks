@@ -1,6 +1,8 @@
 package com.group2.model;
 
-public class HandShakeMessage {
+import java.io.Serializable;
+
+public class HandShakeMessage implements Serializable {
     private final static String handShakeHeader = "P2PFILESHARINGPROJ";
     private byte[] zeroBits = new byte[10];
     private int peerId;

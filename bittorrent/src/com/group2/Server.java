@@ -14,7 +14,7 @@ public class Server {
     }
 
     public void run() throws Exception {
-        System.out.println("The server on peer "+ myPeerId + " is running.");
+        System.out.println("The server on peer " + myPeerId + " is running.");
         try (ServerSocket listener = new ServerSocket(peerInfoMap.get(myPeerId).getPort())) {
             while (true) {
                 new Handler(listener.accept()).start();
@@ -27,11 +27,10 @@ public class Server {
      * loop and are responsible for dealing with a single client's requests.
      */
     private static class Handler extends Thread {
-        private   message;    //message received from the client
+        private Object message;    //message received from the client
         private Socket connection;
         private ObjectInputStream in;    //stream read from the socket
         private ObjectOutputStream out;    //stream write to the socket
-
 
 
         Handler(Socket connection) {

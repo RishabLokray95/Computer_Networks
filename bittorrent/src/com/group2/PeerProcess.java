@@ -18,22 +18,28 @@ public class PeerProcess {
         if(args.length < 1) {
             System.out.println("Peer Id not found in args");
         }
-        Integer peerId = Integer.parseInt(args[0]);
+        Integer myId = Integer.parseInt(args[0]);
         List<PeerInfo> peers = PeerInfoReader.getConfigurations();
-        PeerInfo myInfo = peers.stream().filter(x -> x.getPeerId().equals(peerId)).findFirst().get();
+        PeerInfo myInfo = peers.stream().filter(x -> x.getPeerId().equals(myId)).findFirst().get();
 
-        // Create peerInfo Map
-        peerInfoMap = peers.stream().collect(Collectors.toConcurrentMap(PeerInfo::getPeerId, x -> x));
+        // Get peerInfo Map for peers above the current peer
+        for(PeerInfo peerInfo: peers) {
+            if(peerInfo.getPeerId().equals(myId)) {
+                break;
+            } else
+            peerInfoMap.put(peerInfo.getPeerId(), peerInfo);
+        }
+        //peerInfoMap = peers.stream().collect(Collectors.toConcurrentMap(PeerInfo::getPeerId, x -> x));
 
         // Start my server
         Server server = new Server(myInfo);
 
         // Send handshake requests to other eligible peers
         for(PeerInfo peer : peers) {
-            if(peer.getPeerId().equals(peerId)) {
+            if(peer.getPeerId().equals(myId)) {
                 break;
             }
-            Client client = new Client(peerId, peer);
+            Client client = new Client(myId, peer);
             client.sendHandshakeRequest();
             clientsMap.put(peer.getPeerId(), client);
         }
