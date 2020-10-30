@@ -2,7 +2,7 @@ package com.group2;
 
 import com.group2.model.HandShakeMessage;
 import com.group2.model.PeerInfo;
-
+import com.group2.Log;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -31,6 +31,7 @@ public class Client {
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(requestSocket.getInputStream());
+            Log.setInfo("Peer "+myPeerId+" makes a connection to Peer "+peerInfo.getPeerId()+".");
             sendMessage(new HandShakeMessage(myPeerId));
         } catch (ConnectException e) {
             System.err.println("Connection refused. You need to initiate a server first.");
@@ -60,6 +61,7 @@ public class Client {
             out.writeObject(msg);
             out.flush();
         } catch (IOException ioException) {
+            Log.setInfo("Peer"+myPeerId+" could not make a connection to Peer"+peerInfo.getPeerId()+".");
             ioException.printStackTrace();
         }
     }

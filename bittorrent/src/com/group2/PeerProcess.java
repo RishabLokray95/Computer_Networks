@@ -2,7 +2,7 @@ package com.group2;
 
 import com.group2.model.CommonConfiguration;
 import com.group2.model.PeerInfo;
-
+import com.group2.Log;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -23,7 +23,7 @@ public class PeerProcess {
         Integer myId = Integer.parseInt(args[0]);
         List<PeerInfo> peers = PeerInfoReader.getConfigurations();
         PeerInfo myInfo = peers.stream().filter(x -> x.getPeerId().equals(myId)).findFirst().get();
-
+        Log.initialise(myId);
 
         peerInfoMap = peers.stream().collect(Collectors.toConcurrentMap(PeerInfo::getPeerId, x -> x));
 

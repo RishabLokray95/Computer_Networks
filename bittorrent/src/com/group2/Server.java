@@ -3,12 +3,12 @@ package com.group2;
 import com.group2.model.ActualMessage;
 import com.group2.model.BitField;
 import com.group2.model.HandShakeMessage;
-import com.group2.Log;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+
 
 import static com.group2.PeerProcess.clientsMap;
 import static com.group2.PeerProcess.peerInfoMap;
@@ -17,11 +17,11 @@ public class Server extends Thread {
 
     private Integer myPeerId;
 
-    public Log L = new Log(myPeerId);
 
-    public Server(Integer myId) throws IOException {
+    public Server(Integer myId){
         this.myPeerId = myId;
     }
+
 
     public Integer getMyPeerId() {
         return myPeerId;
@@ -29,7 +29,6 @@ public class Server extends Thread {
 
     public void run() {
         System.out.println("The server on peer " + myPeerId + " is running.");
-        L.LOGGER.info("The server on peer " + myPeerId + " is running.");
         try (ServerSocket listener = new ServerSocket(peerInfoMap.get(myPeerId).getPort())) {
             while (true) {
                 new Handler(listener.accept(), myPeerId).start();
@@ -105,7 +104,7 @@ public class Server extends Thread {
 
         private void handleHandShakeMessage(HandShakeMessage receivedHsMsg) {
             this.connectedPeerId = receivedHsMsg.getPeerId();
-
+            Log.setInfo("Peer "+myPeerId+" is connected from peer "+connectedPeerId+".");
             if (!clientsMap.containsKey(receivedHsMsg.getPeerId())) {
                 System.out.println("Send Handshake from "+ myPeerId + "to" + connectedPeerId);
                 //construct a new handshake message and send to the peer to complete handshake
