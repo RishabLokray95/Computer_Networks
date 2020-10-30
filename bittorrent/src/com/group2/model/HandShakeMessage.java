@@ -3,7 +3,7 @@ package com.group2.model;
 import java.io.Serializable;
 
 public class HandShakeMessage implements Serializable {
-    private final static String handShakeHeader = "P2PFILESHARINGPROJ";
+    private String handShakeHeader = "P2PFILESHARINGPROJ";
     private byte[] zeroBits = new byte[10];
     private int peerId;
 
@@ -11,7 +11,7 @@ public class HandShakeMessage implements Serializable {
         this.peerId = peerId;
     }
 
-    public static String getHandShakeHeader() {
+    public String getHandShakeHeader() {
         return handShakeHeader;
     }
 

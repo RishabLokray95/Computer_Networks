@@ -5,6 +5,16 @@ public class PeerInfo {
     private String host;
     private Integer port;
     private boolean hasFile;
+    private BitField bitField;
+
+    public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile, Integer size) {
+        this.peerId = peerId;
+        this.host = host;
+        this.port = port;
+        this.hasFile = hasFile;
+
+        this.bitField = new BitField(12, hasFile);
+    }
 
     public Integer getPeerId() {
         return peerId;
@@ -22,10 +32,7 @@ public class PeerInfo {
         return hasFile;
     }
 
-    public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile) {
-        this.peerId = peerId;
-        this.host = host;
-        this.port = port;
-        this.hasFile = hasFile;
+    public BitField getBitField() {
+        return bitField;
     }
 }

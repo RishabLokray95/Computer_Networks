@@ -11,7 +11,9 @@ import static com.group2.constants.Constants.*;
 public final class CommonPropertiesReader {
 
     public static CommonConfiguration getConfigurations() {
+
         Map<String, String> fileData = new HashMap<>();
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(COMMON_CFG)))) {
             while (reader.ready()) {
                 String line = reader.readLine();
@@ -23,14 +25,15 @@ public final class CommonPropertiesReader {
         } catch (IOException e) {
             System.out.println("IO Exception. Exception : " + e.getMessage());
         }
-        return new CommonConfiguration(
-                fileData.get(PREFERRED_NEIGHBORS),
-                fileData.get(UNCHOKING_INTERVAL),
-                fileData.get(OPTIMISTIC_UNCHOKING_INTERVAL),
-                fileData.get(FILE_NAME),
-                Integer.parseInt(fileData.get(FILE_SIZE)),
-                Integer.parseInt(fileData.get(PIECE_SIZE))
-        );
+
+
+        return CommonConfiguration.CommonConfigurationBuilder.builder()
+                .withNumberOfPreferredNeighbors(fileData.get(PREFERRED_NEIGHBORS))
+                .withUnchokingInterval(fileData.get(UNCHOKING_INTERVAL))
+                .withFileName(fileData.get(OPTIMISTIC_UNCHOKING_INTERVAL))
+                .withFileName(fileData.get(FILE_NAME))
+                .withFileSize(Integer.parseInt(fileData.get(FILE_SIZE)))
+                .withPieceSize(Integer.parseInt(fileData.get(PIECE_SIZE))).build();
     }
 
 }

@@ -38,14 +38,18 @@ public class Client {
             System.err.println("You are trying to connect to an unknown host!");
         } catch (IOException ioException) {
             ioException.printStackTrace();
-        } finally {
-            try {
-                in.close();
-                out.close();
-                requestSocket.close();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
+        }
+    }
+
+    public void shutdown() {
+        try {
+            in.close();
+            out.close();
+            requestSocket.shutdownInput();
+            requestSocket.shutdownOutput();
+            requestSocket.close();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
         }
     }
 
