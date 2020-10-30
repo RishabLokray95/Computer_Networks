@@ -104,19 +104,8 @@ public class Server extends Thread {
         private void handleHandShakeMessage(HandShakeMessage receivedHsMsg) {
             this.connectedPeerId = receivedHsMsg.getPeerId();
 
-            if (clientsMap.containsKey(receivedHsMsg.getPeerId())) {
-                //send bitfield msg if data available
-                //else update the state : state needs to be defined yet
-                System.out.println("Send bitfield message to peer");
-                //create bitfield message and send
-                ActualMessage bitFieldMessage =
-                        ActualMessage.ActualMessageBuilder.builder()
-                                .withMessageType((byte) 5)
-                                .withMessagePayload(peerInfoMap.get(myPeerId).getBitField())
-                                .build();
-                clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
-
-            } else {
+            if (!clientsMap.containsKey(receivedHsMsg.getPeerId())) {
+                System.out.println("Send Handshake from "+ myPeerId + "to" + connectedPeerId);
                 //construct a new handshake message and send to the peer to complete handshake
                 HandShakeMessage newHsMsg = new HandShakeMessage(receivedHsMsg.getPeerId());
                 //send via client
@@ -124,6 +113,13 @@ public class Server extends Thread {
                 clientsMap.put(this.connectedPeerId, newClient);
                 newClient.sendHandshakeRequest();
             }
+
+            ActualMessage bitFieldMessage =
+                    ActualMessage.ActualMessageBuilder.builder()
+                            .withMessageType((byte) 5)
+                            .withMessagePayload(peerInfoMap.get(myPeerId).getBitField())
+                            .build();
+            clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
         }
 
         private void handleActualMessage(ActualMessage receivedMsg) {

@@ -7,13 +7,12 @@ public class PeerInfo {
     private boolean hasFile;
     private BitField bitField;
 
-    public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile, Integer size) {
+    public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile, Integer bitFieldSize) {
         this.peerId = peerId;
         this.host = host;
         this.port = port;
         this.hasFile = hasFile;
-
-        this.bitField = new BitField(12, hasFile);
+        this.bitField = new BitField(bitFieldSize, hasFile);
     }
 
     public Integer getPeerId() {
