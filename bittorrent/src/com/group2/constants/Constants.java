@@ -8,6 +8,6 @@ public final class Constants {
     public final  static String FILE_NAME = "FileName";
     public final  static String FILE_SIZE = "FileSize";
     public final  static String PIECE_SIZE = "PieceSize";
-    public final static  String PEER_INFO_CFG = ".\\bittorrent\\PeerInfo.cfg";
-    public final static  String COMMON_CFG = ".\\bittorrent\\Common.cfg";
+    public final static  String PEER_INFO_CFG = "./bittorrent/PeerInfo.cfg";
+    public final static  String COMMON_CFG = "./bittorrent/Common.cfg";
 }

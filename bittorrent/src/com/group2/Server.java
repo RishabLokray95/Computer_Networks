@@ -3,7 +3,7 @@ package com.group2;
 import com.group2.model.ActualMessage;
 import com.group2.model.BitField;
 import com.group2.model.HandShakeMessage;
-
+import com.group2.Log;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -17,8 +17,9 @@ public class Server extends Thread {
 
     private Integer myPeerId;
 
+    public Log L = new Log(myPeerId);
 
-    public Server(Integer myId) {
+    public Server(Integer myId) throws IOException {
         this.myPeerId = myId;
     }
 
@@ -28,6 +29,7 @@ public class Server extends Thread {
 
     public void run() {
         System.out.println("The server on peer " + myPeerId + " is running.");
+        L.LOGGER.info("The server on peer " + myPeerId + " is running.");
         try (ServerSocket listener = new ServerSocket(peerInfoMap.get(myPeerId).getPort())) {
             while (true) {
                 new Handler(listener.accept(), myPeerId).start();
