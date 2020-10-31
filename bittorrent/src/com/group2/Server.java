@@ -3,12 +3,13 @@ package com.group2;
 import com.group2.model.ActualMessage;
 import com.group2.model.BitField;
 import com.group2.model.HandShakeMessage;
+import com.group2.model.MessageType;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 
 import static com.group2.PeerProcess.clientsMap;
 import static com.group2.PeerProcess.peerInfoMap;
@@ -114,37 +115,23 @@ public class Server extends Thread {
                 clientsMap.put(this.connectedPeerId, newClient);
                 newClient.sendHandshakeRequest();
             }
-
-            ActualMessage bitFieldMessage =
-                    ActualMessage.ActualMessageBuilder.builder()
-                            .withMessageType((byte) 5)
-                            .withMessagePayload(peerInfoMap.get(myPeerId).getBitField())
-                            .build();
-            clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
+            //Check if peer has bitfield set
+            if(!peerInfoMap.get(myPeerId).getBitField().isEmpty()) {
+                ActualMessage bitFieldMessage =
+                        ActualMessage.ActualMessageBuilder.builder()
+                                .withMessageType((byte) 5)
+                                .withMessagePayload(peerInfoMap.get(myPeerId).getBitField())
+                                .build();
+                clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
+            }
         }
 
         private void handleActualMessage(ActualMessage receivedMsg) {
-            switch (receivedMsg.getMessageType()) {
-                case 0:
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    break;
-                case 4:
-                    break;
-                case 5:
-                    bitFieldHandler(receivedMsg);
-                    break;
-                case 6:
-                    break;
-                case 7:
-                    break;
-                default:
-                    System.err.println("Error in message type");
+            byte receivedMsgType = receivedMsg.getMessageType();
+            if(receivedMsgType == MessageType.BITFIELD.getMessageTypeValue()){
+                bitFieldHandler(receivedMsg);
             }
+
         }
 
         private void bitFieldHandler(ActualMessage receivedMsg) {

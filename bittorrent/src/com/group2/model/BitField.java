@@ -6,12 +6,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BitField implements Serializable {
 
     private AtomicBoolean[] bitFieldMessage;
+    private boolean isEmpty = true;
 
     public BitField(Integer payloadSize, Boolean hasFile) {
         this.bitFieldMessage = new AtomicBoolean[payloadSize];
         if (hasFile) {
-            setBitFieldRange(0, bitFieldMessage.length);
+            this.isEmpty = false;
+            for(int i = 0; i < payloadSize; i++)
+                bitFieldMessage[i] = new AtomicBoolean(true);
+        }else {
+            for(int i = 0; i < payloadSize; i++)
+                bitFieldMessage[i] = new AtomicBoolean();
         }
+
     }
     //use setter maybe?
     public AtomicBoolean[] getBitFieldMessage() {
@@ -19,16 +26,25 @@ public class BitField implements Serializable {
     }
 
     public void setBitField(Integer index){
+        this.isEmpty = false;
         bitFieldMessage[index].set(true);
     }
 
     public void setBitFieldMessage(AtomicBoolean[] bitField){
+        this.isEmpty = false;
         this.bitFieldMessage = bitField;
     }
 
-    public void setBitFieldRange(Integer startIndex, Integer endIndex){
-        for (Integer i = startIndex; i < endIndex; i++){
-            bitFieldMessage[i].set(true);
-        }
+//    public void setBitFieldRange(Integer startIndex, Integer endIndex){
+//        this.isEmpty = false;
+//        System.out.println("this is bitfield msg "+ this.bitFieldMessage);
+//        for (Integer i = startIndex; i < endIndex; i++){
+//            System.out.println(this.bitFieldMessage[0]);
+//            this.bitFieldMessage[i].set(true);
+//        }
+//    }
+
+    public boolean isEmpty() {
+        return isEmpty;
     }
 }

@@ -22,7 +22,7 @@ public final class PeerInfoReader {
                 Integer peerId = Integer.parseInt(data[0]);
                 String peerHost = data[1].trim();
                 Integer port = Integer.parseInt(data[2]);
-                boolean hasFile = Boolean.parseBoolean(data[3]);
+                boolean hasFile = Integer.parseInt(data[3]) == 1;
                 PeerInfo peerInfo = new PeerInfo(peerId, peerHost, port, hasFile, bitFieldSize);
                 peers.add(peerInfo);
             }
