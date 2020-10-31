@@ -1,12 +1,15 @@
 package com.group2.model;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class PeerInfo {
     private Integer peerId;
     private String host;
     private Integer port;
     private boolean hasFile;
     private BitField bitField;
-    private boolean isInterested;
+    private AtomicBoolean isInterested = new AtomicBoolean(false);
+    private AtomicBoolean hasChoked = new AtomicBoolean(true);
 
     public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile, Integer bitFieldSize) {
         this.peerId = peerId;
@@ -37,10 +40,18 @@ public class PeerInfo {
     }
 
     public boolean isInterested() {
-        return isInterested;
+        return isInterested.get();
     }
 
     public void setInterested(boolean interested) {
-        isInterested = interested;
+        isInterested.set(interested);
+    }
+
+    public boolean isHasChoked() {
+        return hasChoked.get();
+    }
+
+    public void setHasChoked(boolean hasChoked) {
+        this.hasChoked.set(hasChoked);
     }
 }

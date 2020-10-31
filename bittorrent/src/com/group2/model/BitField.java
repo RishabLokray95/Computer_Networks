@@ -6,18 +6,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BitField implements Serializable {
 
     private AtomicBoolean[] bitFieldMessage;
-    private Integer length;
+    private final Integer length;
     private boolean isEmpty = true;
 
     public BitField(Integer payloadSize, Boolean hasFile) {
-        this.bitFieldMessage = new AtomicBoolean[payloadSize];
         this.length = payloadSize;
+        this.bitFieldMessage = new AtomicBoolean[length];
+
         if (hasFile) {
             this.isEmpty = false;
-            for(int i = 0; i < payloadSize; i++)
+            for(int i = 0; i < length; i++)
                 bitFieldMessage[i] = new AtomicBoolean(true);
         }else {
-            for(int i = 0; i < payloadSize; i++)
+            for(int i = 0; i < length; i++)
                 bitFieldMessage[i] = new AtomicBoolean();
         }
 
@@ -46,17 +47,24 @@ public class BitField implements Serializable {
 //        }
 //    }
 
-    public boolean isInteresting(BitField availableBitField){
-        boolean interested = false;
+    public boolean isInteresting(BitField peerBitField){
         for(int i=0 ; i < length ; i++){
-            if(bitFieldMessage[i].get() && !availableBitField.bitFieldMessage[i].get()) {
-                interested = true;
-                break;
+            if(bitFieldMessage[i].get() && !peerBitField.bitFieldMessage[i].get()) {
+                return true;
             }
         }
-        return interested;
+        return false;
     }
 
+    public Integer getInterestingField(BitField peerBitField){
+        for(int i=0 ; i < length ; i++){
+            if(bitFieldMessage[i].get() && !peerBitField.bitFieldMessage[i].get()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
     public boolean isEmpty() {
         return isEmpty;
     }

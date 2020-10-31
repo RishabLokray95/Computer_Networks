@@ -137,6 +137,14 @@ public class Server extends Thread {
             if(receivedMsgType == MessageType.NOTINTERESTED.getMessageTypeValue())
                 notInterestedHandler(receivedMsg);
 
+            if(receivedMsgType == MessageType.UNCHOKE.getMessageTypeValue())
+                unchokeHandler(receivedMsg);
+
+            if(receivedMsgType == MessageType.CHOKE.getMessageTypeValue())
+                chokeHandler(receivedMsg);
+
+            if(receivedMsgType == MessageType.REQUEST.getMessageTypeValue())
+                requestHandler(receivedMsg);
         }
 
         private void bitFieldHandler(ActualMessage receivedMsg) {
@@ -154,13 +162,51 @@ public class Server extends Thread {
             }
         }
 
-        private void interestedHandler(ActualMessage receiveMsg){
+        private void interestedHandler(ActualMessage receivedMsg){
             peerInfoMap.get(connectedPeerId).setInterested(true);
+            Log.setInfo("Peer " +myPeerId+ " received the ‘interested’ message from " + connectedPeerId);
+            //Unchoking peer for now. Will later be done by preferred or optimistic way
+            //TODO: remove the below message
+            ActualMessage unchokeMessage =
+                    ActualMessage.ActualMessageBuilder.builder()
+                            .withMessageType(MessageType.UNCHOKE.getMessageTypeValue())
+                            .build();
+            clientsMap.get(this.connectedPeerId).sendMessage(unchokeMessage);
+        }
+
+        private void notInterestedHandler(ActualMessage receivedMsg){
+            peerInfoMap.get(connectedPeerId).setInterested(false);
             Log.setInfo("Peer " +myPeerId+ " received the ‘interested’ message from " + connectedPeerId);
         }
 
-        private void notInterestedHandler(ActualMessage receiveMsg){
-            peerInfoMap.get(connectedPeerId).setInterested(false);
+        private void chokeHandler(ActualMessage receivedMsg){
+            peerInfoMap.get(connectedPeerId).setHasChoked(true);
+            Log.setInfo("Peer " +myPeerId+ " is choked by " + connectedPeerId);
+        }
+
+        private void unchokeHandler(ActualMessage receivedMsg){
+            peerInfoMap.get(connectedPeerId).setHasChoked(false);
+            Log.setInfo("Peer " +myPeerId+ " is unchoked by " + connectedPeerId);
+            //Check if the peer has any interesting
+            int interestingField = peerInfoMap.get(connectedPeerId)
+                    .getBitField().getInterestingField(peerInfoMap.get(myPeerId).getBitField());
+
+            System.out.println("Interesting Field " + interestingField);
+            if(interestingField >= 0){
+                //Create Request
+                ActualMessage requestMessage =
+                        ActualMessage.ActualMessageBuilder.builder()
+                                .withMessageType(MessageType.REQUEST.getMessageTypeValue())
+                                .withMessagePayload(interestingField)
+                                .build();
+                clientsMap.get(this.connectedPeerId).sendMessage(requestMessage);
+                
+            }
+        }
+
+        private void requestHandler(ActualMessage receivedMsg){
+            int pieceIndex = (int) receivedMsg.getMessagePayload();
+            Log.setInfo("Received request from "+ connectedPeerId + " to " + myPeerId + " for piece Index " + pieceIndex);
         }
     }
 }
