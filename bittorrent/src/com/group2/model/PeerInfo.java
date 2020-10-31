@@ -6,6 +6,7 @@ public class PeerInfo {
     private Integer port;
     private boolean hasFile;
     private BitField bitField;
+    private boolean isInterested;
 
     public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile, Integer bitFieldSize) {
         this.peerId = peerId;
@@ -33,5 +34,13 @@ public class PeerInfo {
 
     public BitField getBitField() {
         return bitField;
+    }
+
+    public boolean isInterested() {
+        return isInterested;
+    }
+
+    public void setInterested(boolean interested) {
+        isInterested = interested;
     }
 }

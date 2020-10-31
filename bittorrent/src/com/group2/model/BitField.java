@@ -6,10 +6,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BitField implements Serializable {
 
     private AtomicBoolean[] bitFieldMessage;
+    private Integer length;
     private boolean isEmpty = true;
 
     public BitField(Integer payloadSize, Boolean hasFile) {
         this.bitFieldMessage = new AtomicBoolean[payloadSize];
+        this.length = payloadSize;
         if (hasFile) {
             this.isEmpty = false;
             for(int i = 0; i < payloadSize; i++)
@@ -43,6 +45,17 @@ public class BitField implements Serializable {
 //            this.bitFieldMessage[i].set(true);
 //        }
 //    }
+
+    public boolean isInteresting(BitField availableBitField){
+        boolean interested = false;
+        for(int i=0 ; i < length ; i++){
+            if(bitFieldMessage[i].get() && !availableBitField.bitFieldMessage[i].get()) {
+                interested = true;
+                break;
+            }
+        }
+        return interested;
+    }
 
     public boolean isEmpty() {
         return isEmpty;

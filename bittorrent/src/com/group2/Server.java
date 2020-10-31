@@ -119,7 +119,7 @@ public class Server extends Thread {
             if(!peerInfoMap.get(myPeerId).getBitField().isEmpty()) {
                 ActualMessage bitFieldMessage =
                         ActualMessage.ActualMessageBuilder.builder()
-                                .withMessageType((byte) 5)
+                                .withMessageType(MessageType.BITFIELD.getMessageTypeValue())
                                 .withMessagePayload(peerInfoMap.get(myPeerId).getBitField())
                                 .build();
                 clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
@@ -128,9 +128,14 @@ public class Server extends Thread {
 
         private void handleActualMessage(ActualMessage receivedMsg) {
             byte receivedMsgType = receivedMsg.getMessageType();
-            if(receivedMsgType == MessageType.BITFIELD.getMessageTypeValue()){
+            if(receivedMsgType == MessageType.BITFIELD.getMessageTypeValue())
                 bitFieldHandler(receivedMsg);
-            }
+
+            if(receivedMsgType == MessageType.INTERESTED.getMessageTypeValue())
+                interestedHandler(receivedMsg);
+
+            if(receivedMsgType == MessageType.NOTINTERESTED.getMessageTypeValue())
+                notInterestedHandler(receivedMsg);
 
         }
 
@@ -138,10 +143,24 @@ public class Server extends Thread {
             peerInfoMap.get(this.connectedPeerId).getBitField().setBitFieldMessage(
                     ((BitField) receivedMsg.getMessagePayload()).getBitFieldMessage());
             System.out.println("Bitfiled has been set");
-
+            //Check with own Bitfield and send interested if peer has any interesting pieces
+            if(peerInfoMap.get(connectedPeerId).getBitField().isInteresting(peerInfoMap.get(myPeerId).getBitField())){
+                System.out.println(myPeerId + " sending interested to " + connectedPeerId);
+                ActualMessage interestedMessage =
+                        ActualMessage.ActualMessageBuilder.builder()
+                                .withMessageType(MessageType.INTERESTED.getMessageTypeValue())
+                                .build();
+                clientsMap.get(this.connectedPeerId).sendMessage(interestedMessage);
+            }
         }
 
+        private void interestedHandler(ActualMessage receiveMsg){
+            peerInfoMap.get(connectedPeerId).setInterested(true);
+            Log.setInfo("Peer " +myPeerId+ " received the ‘interested’ message from " + connectedPeerId);
+        }
 
+        private void notInterestedHandler(ActualMessage receiveMsg){
+            peerInfoMap.get(connectedPeerId).setInterested(false);
+        }
     }
-
 }
