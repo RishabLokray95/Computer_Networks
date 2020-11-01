@@ -6,22 +6,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BitField implements Serializable {
 
     private AtomicBoolean[] bitFieldMessage;
-    private final Integer length;
     private boolean isEmpty = true;
 
     public BitField(Integer payloadSize, Boolean hasFile) {
-        this.length = payloadSize;
-        this.bitFieldMessage = new AtomicBoolean[length];
+        this.bitFieldMessage = new AtomicBoolean[payloadSize];
 
         if (hasFile) {
             this.isEmpty = false;
-            for(int i = 0; i < length; i++)
+            for(int i = 0; i < bitFieldMessage.length; i++)
                 bitFieldMessage[i] = new AtomicBoolean(true);
         }else {
-            for(int i = 0; i < length; i++)
+            for(int i = 0; i < bitFieldMessage.length; i++)
                 bitFieldMessage[i] = new AtomicBoolean();
         }
-
     }
     //use setter maybe?
     public AtomicBoolean[] getBitFieldMessage() {
@@ -48,7 +45,7 @@ public class BitField implements Serializable {
 //    }
 
     public boolean isInteresting(BitField peerBitField){
-        for(int i=0 ; i < length ; i++){
+        for(int i=0 ; i < bitFieldMessage.length ; i++){
             if(bitFieldMessage[i].get() && !peerBitField.bitFieldMessage[i].get()) {
                 return true;
             }
@@ -57,7 +54,7 @@ public class BitField implements Serializable {
     }
 
     public Integer getInterestingField(BitField peerBitField){
-        for(int i=0 ; i < length ; i++){
+        for(int i=0 ; i < bitFieldMessage.length ; i++){
             if(bitFieldMessage[i].get() && !peerBitField.bitFieldMessage[i].get()) {
                 return i;
             }
