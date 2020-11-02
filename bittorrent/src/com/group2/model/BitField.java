@@ -25,24 +25,19 @@ public class BitField implements Serializable {
         return bitFieldMessage;
     }
 
+    public AtomicBoolean hasBitIndex(Integer index) {
+        return bitFieldMessage[index];
+    }
+
     public void setBitField(Integer index){
         this.isEmpty = false;
         bitFieldMessage[index].set(true);
     }
 
-    public void setBitFieldMessage(AtomicBoolean[] bitField){
+    public void setBitField(AtomicBoolean[] bitField){
         this.isEmpty = false;
         this.bitFieldMessage = bitField;
     }
-
-//    public void setBitFieldRange(Integer startIndex, Integer endIndex){
-//        this.isEmpty = false;
-//        System.out.println("this is bitfield msg "+ this.bitFieldMessage);
-//        for (Integer i = startIndex; i < endIndex; i++){
-//            System.out.println(this.bitFieldMessage[0]);
-//            this.bitFieldMessage[i].set(true);
-//        }
-//    }
 
     public boolean isInteresting(BitField peerBitField){
         for(int i=0 ; i < bitFieldMessage.length ; i++){
@@ -53,7 +48,7 @@ public class BitField implements Serializable {
         return false;
     }
 
-    public Integer getInterestingField(BitField peerBitField){
+    public Integer getInterestingFieldIndex(BitField peerBitField){
         for(int i=0 ; i < bitFieldMessage.length ; i++){
             if(bitFieldMessage[i].get() && !peerBitField.bitFieldMessage[i].get()) {
                 return i;

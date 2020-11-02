@@ -1,9 +1,6 @@
 package com.group2;
 
-import com.group2.model.ActualMessage;
-import com.group2.model.BitField;
-import com.group2.model.HandShakeMessage;
-import com.group2.model.MessageType;
+import com.group2.model.*;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -156,7 +153,7 @@ public class Server extends Thread {
         }
 
         private void bitFieldHandler(ActualMessage receivedMsg) {
-            peerInfoMap.get(this.connectedPeerId).getBitField().setBitFieldMessage(
+            peerInfoMap.get(this.connectedPeerId).getBitField().setBitField(
                     ((BitField) receivedMsg.getMessagePayload()).getBitFieldMessage());
             System.out.println("Bitfiled has been set");
             //Check with own Bitfield and send interested if peer has any interesting pieces
@@ -197,7 +194,7 @@ public class Server extends Thread {
             Log.setInfo("Peer " + myPeerId + " is unchoked by " + connectedPeerId);
             //Check if the peer has any interesting
             int interestingField = peerInfoMap.get(connectedPeerId)
-                    .getBitField().getInterestingField(peerInfoMap.get(myPeerId).getBitField());
+                    .getBitField().getInterestingFieldIndex(peerInfoMap.get(myPeerId).getBitField());
 
             System.out.println("Interesting Field " + interestingField);
             if (interestingField >= 0) {
@@ -233,45 +230,48 @@ public class Server extends Thread {
         }
 
         private void pieceHandler(ActualMessage receivedMsg) {
-            byte[] newPayloadArray = (byte[]) receivedMsg.getMessagePayload();
 
-            Integer destStartIndex = peerInfoMap.get(connectedPeerId).getRequestedBitIndex() * commonConfiguration.getPieceSize();
-            System.out.println("Writing data from " + destStartIndex + "to" + (destStartIndex + newPayloadArray.length -1));
+            PeerInfo connectedPeerInfo = peerInfoMap.get(connectedPeerId);
+            PeerInfo myPeerInfo = peerInfoMap.get(myPeerId);
 
-            System.arraycopy(newPayloadArray, 0, file,destStartIndex, newPayloadArray.length);
+            //Copy the contents of the payload only if not already received from another peer
+            if(!myPeerInfo.getBitField().hasBitIndex(connectedPeerInfo.getRequestedBitIndex()).get()) {
 
-            //Update my bitfield.
-            peerInfoMap.get(myPeerId).getBitField().setBitField(peerInfoMap.get(connectedPeerId).getRequestedBitIndex());
+                byte[] newPayloadArray = (byte[]) receivedMsg.getMessagePayload();
 
-            //Update no of pieces counter to print in log file.
-            peerInfoMap.get(myPeerId).setCurrentNumberOfPieces(peerInfoMap.get(myPeerId).getCurrentNumberOfPieces() + 1);
+                Integer destStartIndex = connectedPeerInfo.getRequestedBitIndex() * commonConfiguration.getPieceSize();
 
-            Log.setInfo("Peer " + myPeerId + " has downloaded the piece " + peerInfoMap
-                    .get(connectedPeerId)
-                    .getRequestedBitIndex() + " from " + connectedPeerId + ". Now the number of pieces it has is " + peerInfoMap
-                    .get(myPeerId).getCurrentNumberOfPieces() + ".");
+                System.arraycopy(newPayloadArray, 0, file, destStartIndex, newPayloadArray.length);
 
+                //Update my bitfield.
+                myPeerInfo.getBitField().setBitField(connectedPeerInfo.getRequestedBitIndex());
 
-            if(peerInfoMap.get(myPeerId).getCurrentNumberOfPieces() == 4){
-                System.out.print("");
+                //Update no of pieces counter to print in log file.
+                myPeerInfo.setCurrentNumberOfPieces(myPeerInfo.getCurrentNumberOfPieces() + 1);
+
+                Log.setInfo("Peer " + myPeerId + " has downloaded the piece "
+                        + connectedPeerInfo.getRequestedBitIndex() + " from "
+                        + connectedPeerId + ". Now the number of pieces it has is " + myPeerInfo.getCurrentNumberOfPieces() + ".");
             }
-            if (peerInfoMap.get(myPeerId)
-                    .getCurrentNumberOfPieces() == peerInfoMap
-                    .get(myPeerId).getBitField().getBitFieldMessage().length) {
-                //END CONNECTION
+
+            if (myPeerInfo.getCurrentNumberOfPieces() == myPeerInfo.getBitField().getBitFieldMessage().length) {
+                //TODO: Need to add logic to send 'not interested' to peers
+                //TODO: File should only be written once
+                //
                 System.out.println("RECEIVED ALL PIECES AND END CONNECTION");
                 Path path = Paths.get("./bittorrent/RECEIVED_FILE.pdf");
+
                 try {
                     Files.write(path, file);
+                    myPeerInfo.setHasFile(true);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
             else {
-                //CHECK if it is unchoked and then send interested message again.
-                int interestingField = peerInfoMap.get(connectedPeerId)
-                        .getBitField().getInterestingField(peerInfoMap.get(myPeerId).getBitField());
-                if (!peerInfoMap.get(connectedPeerId).isHasChoked() && interestingField > -1) {
+                //CHECK if it is unchoked and send the request for next piece
+                int interestingField = connectedPeerInfo.getBitField().getInterestingFieldIndex(myPeerInfo.getBitField());
+                if (!connectedPeerInfo.isHasChoked() && interestingField > -1) {
 
                     System.out.println("Interesting Field " + interestingField);
                     //Create Request
@@ -280,8 +280,8 @@ public class Server extends Thread {
                                     .withMessageType(MessageType.REQUEST.getMessageTypeValue())
                                     .withMessagePayload(interestingField)
                                     .build();
-                    clientsMap.get(this.connectedPeerId).sendMessage(requestMessage);
-                    peerInfoMap.get(connectedPeerId).setRequestedBitIndex(interestingField);
+                    clientsMap.get(connectedPeerId).sendMessage(requestMessage);
+                    connectedPeerInfo.setRequestedBitIndex(interestingField);
                 }
             }
         }

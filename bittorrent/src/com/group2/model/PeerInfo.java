@@ -11,7 +11,7 @@ public class PeerInfo {
     private AtomicBoolean isInterested = new AtomicBoolean(false);
     private AtomicBoolean hasChoked = new AtomicBoolean(true);
     private Integer requestedBitIndex;
-    private Integer currentNumberOfPieces = 0;
+    private Integer currentNumberOfPieces = 0; //TODO: move this to bitfield?
 
     public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile, Integer bitFieldSize) {
         this.peerId = peerId;
@@ -35,6 +35,10 @@ public class PeerInfo {
 
     public boolean isHasFile() {
         return hasFile;
+    }
+
+    public void setHasFile(boolean value){
+        hasFile = value;
     }
 
     public BitField getBitField() {
