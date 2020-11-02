@@ -220,7 +220,8 @@ public class Server extends Thread {
             //Sending that piece to piece handler
             Integer startIndex = pieceIndex * commonConfiguration.getPieceSize();
             Integer endIndex = Math.min(startIndex + commonConfiguration.getPieceSize() - 1,commonConfiguration.getFileSize()-1);
-            byte[] requested_data = Arrays.copyOfRange(file, startIndex, endIndex);
+            System.out.println("Sending data from " + startIndex + "to" + endIndex);
+            byte[] requested_data = Arrays.copyOfRange(file, startIndex, endIndex + 1);
 
             ActualMessage pieceMessage =
                     ActualMessage.ActualMessageBuilder.builder()
@@ -235,6 +236,8 @@ public class Server extends Thread {
             byte[] newPayloadArray = (byte[]) receivedMsg.getMessagePayload();
 
             Integer destStartIndex = peerInfoMap.get(connectedPeerId).getRequestedBitIndex() * commonConfiguration.getPieceSize();
+            System.out.println("Writing data from " + destStartIndex + "to" + (destStartIndex + newPayloadArray.length -1));
+
             System.arraycopy(newPayloadArray, 0, file,destStartIndex, newPayloadArray.length);
 
             //Update my bitfield.
