@@ -3,6 +3,10 @@ package com.group2;
 import com.group2.model.CommonConfiguration;
 import com.group2.model.PeerInfo;
 import com.group2.Log;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -14,7 +18,7 @@ public class PeerProcess {
     public static ConcurrentMap<Integer, Client> clientsMap = new ConcurrentHashMap<>();
     public static ConcurrentMap<Integer, PeerInfo> peerInfoMap = new ConcurrentHashMap<>();
     public final static CommonConfiguration commonConfiguration = CommonPropertiesReader.getConfigurations();
-
+    public static byte[] file;
 
     public static void main(String[] args) throws Exception {
         if(args.length < 1) {
@@ -30,6 +34,15 @@ public class PeerProcess {
         // Start my server
         Server server = new Server(myInfo.getPeerId());
         server.start();
+
+        //Check if has File and populate byte array; else create empty byte array.
+        if(myInfo.isHasFile()){
+            file = Files.readAllBytes(Paths.get("./bittorrent/testFile.pdf"));
+        }
+        else{
+            file = new byte[commonConfiguration.getFileSize()];
+        }
+
         // Send handshake requests to other eligible peers
         for(PeerInfo peer : peers) {
             if(peer.getPeerId().equals(myId)) {

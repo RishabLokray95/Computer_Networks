@@ -10,6 +10,8 @@ public class PeerInfo {
     private BitField bitField;
     private AtomicBoolean isInterested = new AtomicBoolean(false);
     private AtomicBoolean hasChoked = new AtomicBoolean(true);
+    private Integer requestedBitIndex;
+    private Integer currentNumberOfPieces = 0;
 
     public PeerInfo(Integer peerId, String host, Integer port, boolean hasFile, Integer bitFieldSize) {
         this.peerId = peerId;
@@ -53,5 +55,21 @@ public class PeerInfo {
 
     public void setHasChoked(boolean hasChoked) {
         this.hasChoked.set(hasChoked);
+    }
+
+    public Integer getRequestedBitIndex() {
+        return requestedBitIndex;
+    }
+
+    public void setRequestedBitIndex(Integer requestedBitIndex) {
+        this.requestedBitIndex = requestedBitIndex;
+    }
+
+    public Integer getCurrentNumberOfPieces() {
+        return currentNumberOfPieces;
+    }
+
+    public void setCurrentNumberOfPieces(Integer currentNumberOfPieces) {
+        this.currentNumberOfPieces = currentNumberOfPieces;
     }
 }
