@@ -2,7 +2,6 @@ package com.group2;
 
 import com.group2.model.HandShakeMessage;
 import com.group2.model.PeerInfo;
-import com.group2.Log;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

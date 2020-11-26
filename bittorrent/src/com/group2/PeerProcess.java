@@ -2,14 +2,13 @@ package com.group2;
 
 import com.group2.model.CommonConfiguration;
 import com.group2.model.PeerInfo;
-import com.group2.Log;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Set;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 
@@ -18,6 +17,8 @@ public class PeerProcess {
     public static ConcurrentMap<Integer, Client> clientsMap = new ConcurrentHashMap<>();
     public static ConcurrentMap<Integer, PeerInfo> peerInfoMap = new ConcurrentHashMap<>();
     public final static CommonConfiguration commonConfiguration = CommonPropertiesReader.getConfigurations();
+    public static Set<Integer> preferredPeers = new HashSet<Integer>();
+    public static Integer optimisticallyUnchokedPeer = 0;
     public static byte[] file;
 
     public static void main(String[] args) throws Exception {
@@ -34,6 +35,16 @@ public class PeerProcess {
         // Start my server
         Server server = new Server(myInfo.getPeerId());
         server.start();
+        ScheduledExecutorService preferredScheduler = Executors.newSingleThreadScheduledExecutor();
+        Runnable preferredUnchoke =  new PreferredUnchoke();
+        preferredScheduler.scheduleAtFixedRate(preferredUnchoke, 0,
+                Long.parseLong(commonConfiguration.getUnchokingInterval()), TimeUnit.SECONDS);
+
+        ScheduledExecutorService optimisticScheduler = Executors.newSingleThreadScheduledExecutor();
+        Runnable optimisticUnchoke =  new OptimisticUnchoke();
+        preferredScheduler.scheduleAtFixedRate(optimisticUnchoke, 0,
+                Long.parseLong(commonConfiguration.getOptimisticUnchokingInterval()), TimeUnit.SECONDS);
+
 
         //Check if has File and populate byte array; else create empty byte array.
         if(myInfo.isHasFile()){
