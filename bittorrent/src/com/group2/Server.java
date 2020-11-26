@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Scanner;
 
 import static com.group2.PeerProcess.*;
 
@@ -117,11 +116,11 @@ public class Server extends Thread {
                 newClient.sendHandshakeRequest();
             }
             //Check if peer has bitfield set
-            if (!peerInfoMap.get(myPeerId).getBitField().isEmpty()) {
+            if (!peerInfoMap.get(myPeerId).getBitFieldPayload().isEmpty()) {
                 ActualMessage bitFieldMessage =
                         ActualMessage.ActualMessageBuilder.builder()
                                 .withMessageType(MessageType.BITFIELD.getMessageTypeValue())
-                                .withMessagePayload(peerInfoMap.get(myPeerId).getBitField())
+                                .withMessagePayload(peerInfoMap.get(myPeerId).getBitFieldPayload())
                                 .build();
                 clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
             }
@@ -153,11 +152,11 @@ public class Server extends Thread {
         }
 
         private void bitFieldHandler(ActualMessage receivedMsg) {
-            peerInfoMap.get(this.connectedPeerId).getBitField().setBitField(
-                    ((BitField) receivedMsg.getMessagePayload()).getBitFieldMessage());
+            peerInfoMap.get(this.connectedPeerId).getBitFieldPayload().setBit(
+                    ((BitField) receivedMsg.getMessagePayload()).getBitField());
             System.out.println("Bitfiled has been set");
             //Check with own Bitfield and send interested if peer has any interesting pieces
-            if (peerInfoMap.get(connectedPeerId).getBitField().isInteresting(peerInfoMap.get(myPeerId).getBitField())) {
+            if (peerInfoMap.get(connectedPeerId).getBitFieldPayload().isInteresting(peerInfoMap.get(myPeerId).getBitFieldPayload())) {
                 System.out.println(myPeerId + " sending interested to " + connectedPeerId);
                 ActualMessage interestedMessage =
                         ActualMessage.ActualMessageBuilder.builder()
@@ -194,7 +193,7 @@ public class Server extends Thread {
             Log.setInfo("Peer " + myPeerId + " is unchoked by " + connectedPeerId);
             //Check if the peer has any interesting
             int interestingField = peerInfoMap.get(connectedPeerId)
-                    .getBitField().getInterestingFieldIndex(peerInfoMap.get(myPeerId).getBitField());
+                    .getBitFieldPayload().getInterestingFieldIndex(peerInfoMap.get(myPeerId).getBitFieldPayload());
 
             System.out.println("Interesting Field " + interestingField);
             if (interestingField >= 0) {
@@ -232,29 +231,30 @@ public class Server extends Thread {
         private void pieceHandler(ActualMessage receivedMsg) {
 
             PeerInfo connectedPeerInfo = peerInfoMap.get(connectedPeerId);
-            PeerInfo myPeerInfo = peerInfoMap.get(myPeerId);
+            PeerInfo myInfo = peerInfoMap.get(myPeerId);
+
 
             //Copy the contents of the payload only if not already received from another peer
-            if(!myPeerInfo.getBitField().hasBitIndex(connectedPeerInfo.getRequestedBitIndex()).get()) {
+            if(!myInfo.getBitFieldPayload().hasBitIndex(connectedPeerInfo.getRequestedBitIndex()).get()) {
 
                 byte[] newPayloadArray = (byte[]) receivedMsg.getMessagePayload();
 
-                Integer destStartIndex = connectedPeerInfo.getRequestedBitIndex() * commonConfiguration.getPieceSize();
+                int destStartIndex = connectedPeerInfo.getRequestedBitIndex() * commonConfiguration.getPieceSize();
 
                 System.arraycopy(newPayloadArray, 0, file, destStartIndex, newPayloadArray.length);
 
                 //Update my bitfield.
-                myPeerInfo.getBitField().setBitField(connectedPeerInfo.getRequestedBitIndex());
+                myInfo.getBitFieldPayload().setBit(connectedPeerInfo.getRequestedBitIndex());
 
                 //Update no of pieces counter to print in log file.
-                myPeerInfo.setCurrentNumberOfPieces(myPeerInfo.getCurrentNumberOfPieces() + 1);
+                //myInfo.setCurrentNumberOfPieces(myInfo.getCurrentNumberOfPieces() + 1);
 
                 Log.setInfo("Peer " + myPeerId + " has downloaded the piece "
                         + connectedPeerInfo.getRequestedBitIndex() + " from "
-                        + connectedPeerId + ". Now the number of pieces it has is " + myPeerInfo.getCurrentNumberOfPieces() + ".");
+                        + connectedPeerId + ". Now the number of pieces it has is " + myInfo.getBitFieldPayload().haveBitsCount() + ".");
             }
 
-            if (myPeerInfo.getCurrentNumberOfPieces() == myPeerInfo.getBitField().getBitFieldMessage().length) {
+            if (myInfo.getBitFieldPayload().haveBitsCount().equals(myInfo.getBitFieldPayload().getBitField().length)) {
                 //TODO: Need to add logic to send 'not interested' to peers
                 //TODO: File should only be written once
                 //
@@ -263,14 +263,14 @@ public class Server extends Thread {
 
                 try {
                     Files.write(path, file);
-                    myPeerInfo.setHasFile(true);
+                    myInfo.setHasFile(true);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
             else {
                 //CHECK if it is unchoked and send the request for next piece
-                int interestingField = connectedPeerInfo.getBitField().getInterestingFieldIndex(myPeerInfo.getBitField());
+                int interestingField = connectedPeerInfo.getBitFieldPayload().getInterestingFieldIndex(myInfo.getBitFieldPayload());
                 if (!connectedPeerInfo.isHasChoked() && interestingField > -1) {
 
                     System.out.println("Interesting Field " + interestingField);
