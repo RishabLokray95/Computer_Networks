@@ -1,7 +1,7 @@
 package com.group2.model;
 
 public class CommonConfiguration {
-    private String numberOfPreferredNeighbors;
+    private Integer numberOfPreferredNeighbors;
     private String unchokingInterval;
     private String optimisticUnchokingInterval;
     private String fileName;
@@ -9,7 +9,7 @@ public class CommonConfiguration {
     private Integer pieceSize;
 
     private CommonConfiguration(String numberOfPreferredNeighbors, String unchokingInterval, String optimisticUnchokingInterval, String fileName, Integer fileSize, Integer pieceSize) {
-        this.numberOfPreferredNeighbors = numberOfPreferredNeighbors;
+        this.numberOfPreferredNeighbors = Integer.parseInt(numberOfPreferredNeighbors);
         this.unchokingInterval = unchokingInterval;
         this.optimisticUnchokingInterval = optimisticUnchokingInterval;
         this.fileName = fileName;
@@ -17,7 +17,7 @@ public class CommonConfiguration {
         this.pieceSize = pieceSize;
     }
 
-    public String getNumberOfPreferredNeighbors() {
+    public Integer getNumberOfPreferredNeighbors() {
         return numberOfPreferredNeighbors;
     }
 

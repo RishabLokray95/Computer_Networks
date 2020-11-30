@@ -1,6 +1,7 @@
 package com.group2;
 
 import com.group2.model.CommonConfiguration;
+import com.group2.model.DownloadRatesFetcher;
 import com.group2.model.PeerInfo;
 
 import java.nio.file.Files;
@@ -18,6 +19,7 @@ public class PeerProcess {
     public static ConcurrentMap<Integer, PeerInfo> peerInfoMap = new ConcurrentHashMap<>();
     public final static CommonConfiguration commonConfiguration = CommonPropertiesReader.getConfigurations();
     public static Set<Integer> preferredPeers = new HashSet<Integer>();
+    public static  DownloadRatesFetcher downloadRates;
     public static Integer optimisticallyUnchokedPeer = 0;
     public static byte[] file;
 
@@ -36,7 +38,7 @@ public class PeerProcess {
         Server server = new Server(myInfo.getPeerId());
         server.start();
         ScheduledExecutorService preferredScheduler = Executors.newSingleThreadScheduledExecutor();
-        Runnable preferredUnchoke =  new PreferredUnchoke();
+        Runnable preferredUnchoke =  new PreferredUnchoke(myInfo);
         preferredScheduler.scheduleAtFixedRate(preferredUnchoke, 0,
                 Long.parseLong(commonConfiguration.getUnchokingInterval()), TimeUnit.SECONDS);
 

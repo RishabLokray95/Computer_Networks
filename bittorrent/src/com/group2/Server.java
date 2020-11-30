@@ -16,11 +16,12 @@ import static com.group2.PeerProcess.*;
 
 public class Server extends Thread {
 
-    private Integer myPeerId;
+    private final Integer myPeerId;
 
 
     public Server(Integer myId){
         this.myPeerId = myId;
+
     }
 
 
@@ -55,6 +56,7 @@ public class Server extends Thread {
         Handler(Socket connection, Integer myId) {
             this.connection = connection;
             this.myPeerId = myId;
+
         }
 
         public void run() {
@@ -169,13 +171,7 @@ public class Server extends Thread {
         private void interestedHandler(ActualMessage receivedMsg) {
             peerInfoMap.get(connectedPeerId).setInterested(true);
             Log.setInfo("Peer " + myPeerId + " received the ‘interested’ message from " + connectedPeerId);
-            //Unchoking peer for now. Will later be done by preferred or optimistic way
-            //TODO: remove the below message
-            ActualMessage unchokeMessage =
-                    ActualMessage.ActualMessageBuilder.builder()
-                            .withMessageType(MessageType.UNCHOKE.getMessageTypeValue())
-                            .build();
-            clientsMap.get(this.connectedPeerId).sendMessage(unchokeMessage);
+
         }
 
         private void notInterestedHandler(ActualMessage receivedMsg) {
@@ -234,12 +230,16 @@ public class Server extends Thread {
             PeerInfo myInfo = peerInfoMap.get(myPeerId);
 
 
+
             //Copy the contents of the payload only if not already received from another peer
             if(!myInfo.getBitFieldPayload().hasBitIndex(connectedPeerInfo.getRequestedBitIndex()).get()) {
 
                 byte[] newPayloadArray = (byte[]) receivedMsg.getMessagePayload();
 
+                downloadRates.addPeerDownloadDetails(connectedPeerId,newPayloadArray.length);
+
                 int destStartIndex = connectedPeerInfo.getRequestedBitIndex() * commonConfiguration.getPieceSize();
+
 
                 System.arraycopy(newPayloadArray, 0, file, destStartIndex, newPayloadArray.length);
 
@@ -259,6 +259,8 @@ public class Server extends Thread {
                 //TODO: File should only be written once
                 //
                 System.out.println("RECEIVED ALL PIECES AND END CONNECTION");
+                Log.setInfo("Peer "+myPeerId+" has downloaded the complete file.");
+
                 Path path = Paths.get("./bittorrent/RECEIVED_FILE.pdf");
 
                 try {

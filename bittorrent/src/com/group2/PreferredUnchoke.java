@@ -2,13 +2,21 @@ package com.group2;
 
 import com.group2.model.ActualMessage;
 import com.group2.model.MessageType;
+import com.group2.model.PeerInfo;
 
-import java.util.HashSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.group2.PeerProcess.*;
+import static java.util.Map.Entry.comparingByValue;
 
 public class PreferredUnchoke implements Runnable {
-    private HashSet<Integer> newNeighbours = new HashSet<>();
+    private final PeerInfo myInfo;
+    private final HashSet<Integer> newNeighbours = new HashSet<>();
+
+    public PreferredUnchoke(PeerInfo myInfo) {
+        this.myInfo = myInfo;
+    }
 
     @Override
     public void run() {
@@ -22,7 +30,7 @@ public class PreferredUnchoke implements Runnable {
                 ActualMessage.ActualMessageBuilder.builder()
                         .withMessageType(MessageType.CHOKE.getMessageTypeValue())
                         .build();
-        for (Integer peerId: oldPreferred) {
+        for (Integer peerId : oldPreferred) {
             clientsMap.get(peerId).sendMessage(chokeMessage);
         }
 
@@ -34,22 +42,47 @@ public class PreferredUnchoke implements Runnable {
                 ActualMessage.ActualMessageBuilder.builder()
                         .withMessageType(MessageType.UNCHOKE.getMessageTypeValue())
                         .build();
-        for (Integer peerId: newPreferred) {
+        for (Integer peerId : newPreferred) {
             clientsMap.get(peerId).sendMessage(unchokeMessage);
         }
         preferredPeers = newPreferred;
 
     }
 
-    void newNeighbours(){
+    void newNeighbours() {
         newNeighbours.clear();
-        for (Integer peerId : peerInfoMap.keySet()) {
-            if(newNeighbours.size() >= Integer.parseInt(commonConfiguration.getNumberOfPreferredNeighbors())){
-                break;
+
+        if (myInfo.isHasFile()) {
+            //Select neighbours that are interested.
+
+            List<Integer> interestedPeers = peerInfoMap.values().stream().
+                    filter(PeerInfo::isInterested).map(PeerInfo::getPeerId).distinct()
+                    .collect(Collectors.toList());
+            Collections.shuffle(interestedPeers);
+            if(interestedPeers.size() <= commonConfiguration.getNumberOfPreferredNeighbors())
+                newNeighbours.addAll(interestedPeers);
+            else{
+                newNeighbours.addAll(interestedPeers.subList(0,commonConfiguration.getNumberOfPreferredNeighbors()));
             }
-            if(peerInfoMap.get(peerId).isInterested()){
-                newNeighbours.add(peerId);
-            }
+
+        } else {
+            //Check download rates and then set newNeighbours
+
+            // Copy the map
+            Set<Integer> sorted = downloadRates.getDownloadRateMap()
+                    .entrySet()
+                    .stream()
+                    .sorted(comparingByValue())
+                    .limit(commonConfiguration.getNumberOfPreferredNeighbors())
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet());
+
+            //Flush download rates map
+            downloadRates.getDownloadRateMap().clear();
+
+            //Add the top k neighbours with highest download rates to newNeighbours set.
+            newNeighbours.addAll(sorted);
         }
+
     }
 }
