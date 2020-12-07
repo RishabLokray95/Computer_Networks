@@ -1,7 +1,7 @@
 package com.group2.model;
 
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BitField implements Serializable {
@@ -52,13 +52,23 @@ public class BitField implements Serializable {
         return false;
     }
 
+    public boolean isNotInteresting(BitField peerBitField) {
+        return !isInteresting(peerBitField);
+    }
+
     public Integer getInterestingFieldIndex(BitField peerBitField){
+        List<Integer> interestingPieces = new ArrayList<>();
         for(int i = 0; i < bitField.length ; i++){
             if(bitField[i].get() && !peerBitField.bitField[i].get()) {
-                return i;
+                interestingPieces.add(i);
             }
         }
-        return -1;
+        if (interestingPieces.isEmpty()) {
+            return  -1;
+        } else {
+            Collections.shuffle(interestingPieces);
+            return interestingPieces.get(0);
+        }
     }
     
     public boolean isEmpty() {
@@ -67,5 +77,9 @@ public class BitField implements Serializable {
 
     public Integer haveBitsCount() {
         return haveBitsCount;
+    }
+
+    public boolean allBitSet() {
+        return Arrays.stream(bitField).map(AtomicBoolean::get).reduce(true, (x, y) -> x && y);
     }
 }

@@ -30,7 +30,7 @@ public final class CommonPropertiesReader {
         return CommonConfiguration.CommonConfigurationBuilder.builder()
                 .withNumberOfPreferredNeighbors(fileData.get(PREFERRED_NEIGHBORS))
                 .withUnchokingInterval(fileData.get(UNCHOKING_INTERVAL))
-                .withFileName(fileData.get(OPTIMISTIC_UNCHOKING_INTERVAL))
+                .withOptimisticUnchokingInterval(fileData.get(OPTIMISTIC_UNCHOKING_INTERVAL))
                 .withFileName(fileData.get(FILE_NAME))
                 .withFileSize(Integer.parseInt(fileData.get(FILE_SIZE)))
                 .withPieceSize(Integer.parseInt(fileData.get(PIECE_SIZE))).build();

@@ -2,6 +2,7 @@ package com.group2;
 import com.group2.model.PeerInfo;
 
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +37,7 @@ public class Log {
 
 
     public static void setInfo (String comment){
-        String timeStamp = new SimpleDateFormat().format(new Date());
+        String timeStamp = new SimpleDateFormat("s").format(new Date());
         LOGGER.info(timeStamp + " " + comment);
         }
     }

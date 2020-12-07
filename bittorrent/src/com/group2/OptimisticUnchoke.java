@@ -16,31 +16,27 @@ public class OptimisticUnchoke implements Runnable {
         Set<Integer> interestedPeers = peerInfoMap
                 .keySet()
                 .stream()
-                .filter(x -> peerInfoMap.get(x).isInterested())
+                .filter(x -> peerInfoMap.get(x).isInterested() && clientsMap.containsKey(x))
                 .collect(Collectors.toSet());
 
         interestedPeers.removeAll(preferredPeers);
         ArrayList<Integer> interestedPeers_list = new ArrayList<>(interestedPeers);
         Collections.shuffle(interestedPeers_list);
-        int newOptimisticUnchokedPeer = interestedPeers_list.get(0);
+        System.out.println("In Optimistic, picking from :" + interestedPeers_list.stream().map(x -> x + "").collect(Collectors.joining(",")));
+        if (interestedPeers_list.size() > 0) {
+            int newOptimisticUnchokedPeer = interestedPeers_list.get(0);
+            if (!preferredPeers.contains(optimisticallyUnchokedPeer)
+                    && optimisticallyUnchokedPeer != newOptimisticUnchokedPeer
+                    && clientsMap.containsKey(optimisticallyUnchokedPeer)) {
 
-        //send unchoke to this new
-        // send unchoke
-        ActualMessage unchokeMessage =
-                ActualMessage.ActualMessageBuilder.builder()
-                        .withMessageType(MessageType.UNCHOKE.getMessageTypeValue())
-                        .build();
-
-        clientsMap.get(newOptimisticUnchokedPeer).sendMessage(unchokeMessage);
-
-        if(!preferredPeers.contains(optimisticallyUnchokedPeer)){
-            ActualMessage chokeMessage =
-                    ActualMessage.ActualMessageBuilder.builder()
-                            .withMessageType(MessageType.CHOKE.getMessageTypeValue())
-                            .build();
-
-            clientsMap.get(newOptimisticUnchokedPeer).sendMessage(chokeMessage);
+                System.out.println("In Optimistic, Choking :" + optimisticallyUnchokedPeer);
+                clientsMap.get(optimisticallyUnchokedPeer).sendMessage(CHOKE_MESSAGE);
+            }
+            if (!preferredPeers.contains(newOptimisticUnchokedPeer) && optimisticallyUnchokedPeer != newOptimisticUnchokedPeer) {
+                System.out.println("In Optimistic, UnChoking :" + newOptimisticUnchokedPeer);
+                clientsMap.get(newOptimisticUnchokedPeer).sendMessage(UNCHOKE_MESSAGE);
+            }
+            optimisticallyUnchokedPeer = newOptimisticUnchokedPeer;
         }
-        optimisticallyUnchokedPeer = newOptimisticUnchokedPeer;
     }
 }
