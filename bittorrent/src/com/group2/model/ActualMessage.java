@@ -10,7 +10,25 @@ public class ActualMessage implements Serializable {
     private ActualMessage(Byte messageType, Object messagePayload) {
         this.messageType = messageType;
         this.messagePayload = messagePayload;
-        this.messageLength = 1 + ObjectSizeFetcher.getObjectSize(messagePayload);
+        this.messageLength = 1 + getMessagePayloadLength(messageType, messagePayload);
+    }
+
+    public static Integer getMessagePayloadLength(Byte messageType, Object messagePayload) {
+        switch (messageType) {
+            case 0: // CHOKE
+            case 1: // UNCHOKE
+            case 2: // INTERESTED
+            case 3: // NOT_INTERESTED
+                return 0;
+            case 6: // REQUEST
+            case 4: // HAVE
+                return Integer.BYTES;
+            case 5: // BITFIELD
+            case 7: // PIECE
+                return ((byte[]) messagePayload).length;
+            default:
+                return 0;
+        }
     }
 
     public Integer getMessageLength() {
