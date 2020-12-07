@@ -1,5 +1,3 @@
-package com.group2.model;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 

@@ -1,5 +1,3 @@
-package com.group2.model;
-
 import java.io.Serializable;
 
 public class HandShakeMessage implements Serializable {

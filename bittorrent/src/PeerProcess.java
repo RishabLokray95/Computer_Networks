@@ -1,7 +1,3 @@
-package com.group2;
-
-import com.group2.model.*;
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -17,7 +13,7 @@ public class PeerProcess {
     public static ConcurrentMap<Integer, PeerInfo> peerInfoMap = new ConcurrentHashMap<>();
     public final static CommonConfiguration commonConfiguration = CommonPropertiesReader.getConfigurations();
     public static Set<Integer> preferredPeers = new HashSet<Integer>();
-    public static  DownloadRatesFetcher downloadRates = new DownloadRatesFetcher();
+    public static DownloadRatesFetcher downloadRates = new DownloadRatesFetcher();
     public static Integer optimisticallyUnchokedPeer = 0;
     public static ActualMessage CHOKE_MESSAGE =
             ActualMessage.ActualMessageBuilder.builder()
@@ -59,7 +55,7 @@ public class PeerProcess {
 
         //Check if has File and populate byte array; else create empty byte array.
         if(myInfo.isHasFile()){
-            file = Files.readAllBytes(Paths.get("./bittorrent/testFile.pdf"));
+            file = Files.readAllBytes(Paths.get(PeerProcess.commonConfiguration.getFileName()));
         }
         else{
             file = new byte[commonConfiguration.getFileSize()];
