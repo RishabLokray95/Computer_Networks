@@ -21,10 +21,11 @@ public final class PeerInfoReader {
                 peers.add(peerInfo);
             }
         } catch (FileNotFoundException e) {
-            System.out.println("File not found. File name : " + Constants.PEER_INFO_CFG + " . Exception : " + e.getMessage());
+            Log.setInfo("File not found. File name : " + Constants.PEER_INFO_CFG + " . Exception : " + e.getMessage());
         } catch (IOException e) {
-            System.out.println("IO Exception. Exception : " + e.getMessage());
+            Log.setInfo("IO Exception. Exception : " + e.getMessage());
         }
+        Log.setInfo("----Read the 'PeerInfo.cfg' file and it will initiate the connection to all the peers above it.----");
         return peers;
     }
 

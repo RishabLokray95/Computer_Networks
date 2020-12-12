@@ -14,13 +14,14 @@ public class PreferredUnchoke implements Runnable {
     @Override
     public void run() {
         // calculate new preferred list
+        Log.setInfo("Unchoking neighbors, updating preferred neighbors");
         this.newNeighbours();
         // check the diff of old and new" list
         HashSet<Integer> oldPreferred = new HashSet<>(PeerProcess.preferredPeers);
         oldPreferred.removeAll(newNeighbours);
         // send choke
         for (Integer peerId : oldPreferred) {
-            System.out.println("In Preferred, Choking :" + peerId);
+            Log.setInfo("Choking :" + peerId);
             PeerProcess.clientsMap.get(peerId).sendMessage(PeerProcess.CHOKE_MESSAGE);
         }
         // check the diff of new and old list
@@ -28,19 +29,21 @@ public class PreferredUnchoke implements Runnable {
         newPreferred.removeAll(PeerProcess.preferredPeers);
         // send unchoke
         for (Integer peerId : newPreferred) {
-            System.out.println("In Preferred, Unchoking :" + peerId);
+            Log.setInfo("Unchoking :" + peerId);
             PeerProcess.clientsMap.get(peerId).sendMessage(PeerProcess.UNCHOKE_MESSAGE);
         }
         PeerProcess.preferredPeers = new HashSet<>(newNeighbours);
+
+        Log.setInfo("Peer " + myInfo.getPeerId() + " has the preferred neighbors: " +
+                PeerProcess.preferredPeers.stream().map(x -> x + "").collect(Collectors.joining(",")));
 
     }
 
     void newNeighbours() {
         newNeighbours.clear();
-
         if (myInfo.isHasFile()) {
             //Select neighbours that are interested.
-
+            Log.setInfo("Unchoking neighbors - Peer has the complete file, peers will be chosen randomly and unchoked");
             List<Integer> interestedPeers = PeerProcess.peerInfoMap
                     .values()
                     .stream()
@@ -55,6 +58,7 @@ public class PreferredUnchoke implements Runnable {
             }
 
         } else {
+            Log.setInfo("Unchoking neighbors - Peers will be chosen based on download rates");
             //Check download rates and then set newNeighbours
             // Copy the map
             Set<Integer> sorted = PeerProcess.downloadRates.getDownloadRateMap()
@@ -67,8 +71,8 @@ public class PreferredUnchoke implements Runnable {
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toSet());
 
-            System.out.println("--------------Pick from these " +
-                    sorted.stream().map(x -> x + "").reduce("", (x, y) -> x + "," + y));
+//            System.out.println("--------------Pick from these " +
+//                    sorted.stream().map(x -> x + "").reduce("", (x, y) -> x + "," + y));
             //Flush download rates map
             PeerProcess.downloadRates.getDownloadRateMap().replaceAll((k, v) -> 0);
 

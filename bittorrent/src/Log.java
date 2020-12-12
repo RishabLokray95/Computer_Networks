@@ -1,39 +1,38 @@
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.Formatter;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.logging.*;
 
 public class Log {
-    public static Logger LOGGER = Logger.getLogger(Log.class.getName());
+    public static Logger LOGGER = Logger.getGlobal();
     private static Integer myPeerId;
-    public static Handler fileHandler;
+    public static StreamHandler fileHandler;
 
-
+    private static final String PATTERN = "MM-dd-yyyy HH:mm:ss.SSS";
     public static void initialise(Integer peerId) {
         myPeerId = peerId;
         try {
-            fileHandler = new FileHandler("./log_file_" + myPeerId + ".log");
-            LOGGER.addHandler(fileHandler);
-            fileHandler.setLevel(Level.INFO);
-            LOGGER.setLevel(Level.INFO);
-            Formatter simpleFormatter = new SimpleFormatter();
+            fileHandler = new FileHandler("../log_peer_" + myPeerId + ".log");
+            Formatter simpleFormatter = new Formatter() {
+                @Override
+                public String format(LogRecord logRecord) {
+                    return String.format(
+                            "%1$s %2$s\n",
+                            new SimpleDateFormat(PATTERN).format(
+                                    new Date(logRecord.getMillis())), formatMessage(logRecord));
+                }
+            };
             fileHandler.setFormatter(simpleFormatter);
+            LOGGER.addHandler(fileHandler);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-
-
-
     public static void setInfo (String comment){
-        String timeStamp = new SimpleDateFormat("s").format(new Date());
-        LOGGER.info(timeStamp + " " + comment);
+        LOGGER.info(comment);
         }
     }
 
