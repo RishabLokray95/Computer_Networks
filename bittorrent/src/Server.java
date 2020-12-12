@@ -310,8 +310,8 @@ public class Server extends Thread {
                 // Send notInterested message to other peers if needed
 //                peerInfoMap.keySet().stream().filter(x -> !x.equals(myPeerId)).forEach(this::sendNotInterestedMessageIfNeeded);
 
-                Path path = Paths.get("./RECEIVED_FILE_" + myPeerId + ".pdf");
-//                Path path = Paths.get(PeerProcess.commonConfiguration.getFileName());
+//                Path path = Paths.get("./RECEIVED_FILE_" + myPeerId + ".pdf");
+                Path path = Paths.get(PeerProcess.commonConfiguration.getFileName());
                 try {
                     Files.write(path, PeerProcess.file);
                     myInfo.setHasFile(true);
