@@ -1,5 +1,3 @@
-package com.group2.model;
-
 public class CommonConfiguration {
     private Integer numberOfPreferredNeighbors;
     private String unchokingInterval;

@@ -1,7 +1,3 @@
-package com.group2;
-
-import com.group2.model.*;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -11,8 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
-import static com.group2.PeerProcess.*;
 
 public class Server extends Thread {
 
@@ -32,7 +26,7 @@ public class Server extends Thread {
 
     public void run() {
         System.out.println("The server on peer " + myPeerId + " is running.");
-        try (ServerSocket listener = new ServerSocket(peerInfoMap.get(myPeerId).getPort())) {
+        try (ServerSocket listener = new ServerSocket(PeerProcess.peerInfoMap.get(myPeerId).getPort())) {
             while (true) {
                 new Handler(listener.accept(), myPeerId).start();
             }
@@ -74,7 +68,7 @@ public class Server extends Thread {
                         message = in.readObject();
                         //show the message to the user
                         handleMessage(message);
-                        Thread.sleep(5000);
+                        //Thread.sleep(5000);
                     }
                 } catch (ClassNotFoundException classnot) {
                     System.err.println("Data received in unknown format");
@@ -110,23 +104,23 @@ public class Server extends Thread {
         private void handleHandShakeMessage(HandShakeMessage receivedHsMsg) {
             this.connectedPeerId = receivedHsMsg.getPeerId();
             Log.setInfo("Peer " + myPeerId + " is connected from peer " + connectedPeerId + ".");
-            if (!clientsMap.containsKey(receivedHsMsg.getPeerId())) {
+            if (!PeerProcess.clientsMap.containsKey(receivedHsMsg.getPeerId())) {
                 System.out.println("Send Handshake from " + myPeerId + "to" + connectedPeerId);
                 //construct a new handshake message and send to the peer to complete handshake
                 HandShakeMessage newHsMsg = new HandShakeMessage(receivedHsMsg.getPeerId());
                 //send via client
-                Client newClient = new Client(myPeerId, peerInfoMap.get(receivedHsMsg.getPeerId()));
-                clientsMap.put(this.connectedPeerId, newClient);
+                Client newClient = new Client(myPeerId, PeerProcess.peerInfoMap.get(receivedHsMsg.getPeerId()));
+                PeerProcess.clientsMap.put(this.connectedPeerId, newClient);
                 newClient.sendHandshakeRequest();
             }
             //Check if peer has bitfield set
-            if (!peerInfoMap.get(myPeerId).getBitFieldPayload().isEmpty()) {
+            if (!PeerProcess.peerInfoMap.get(myPeerId).getBitFieldPayload().isEmpty()) {
                 ActualMessage bitFieldMessage =
                         ActualMessage.ActualMessageBuilder.builder()
                                 .withMessageType(MessageType.BITFIELD.getMessageTypeValue())
-                                .withMessagePayload(peerInfoMap.get(myPeerId).getBitFieldPayload())
+                                .withMessagePayload(PeerProcess.peerInfoMap.get(myPeerId).getBitFieldPayload())
                                 .build();
-                clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
+                PeerProcess.clientsMap.get(this.connectedPeerId).sendMessage(bitFieldMessage);
             }
         }
 
@@ -159,12 +153,12 @@ public class Server extends Thread {
         }
 
         private void bitFieldHandler(ActualMessage receivedMsg) {
-            peerInfoMap.get(this.connectedPeerId).getBitFieldPayload().setBit(
+            PeerProcess.peerInfoMap.get(this.connectedPeerId).getBitFieldPayload().setBit(
                     ((BitField) receivedMsg.getMessagePayload()).getBitField());
-            if(peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
+            if(PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
                 System.out.println("Setting 'has file' to true for peer" + connectedPeerId);
-                peerInfoMap.get(connectedPeerId).setHasFile(true);
-                peerInfoMap.get(connectedPeerId).setInterested(false);
+                PeerProcess.peerInfoMap.get(connectedPeerId).setHasFile(true);
+                PeerProcess.peerInfoMap.get(connectedPeerId).setInterested(false);
             }
             System.out.println("Bitfiled has been set");
             //Check with own Bitfield and send interested if peer has any interesting pieces
@@ -173,53 +167,53 @@ public class Server extends Thread {
         }
 
         private void sendInterestedMessageIfNeeded() {
-            if (peerInfoMap.get(connectedPeerId).getBitFieldPayload().isInteresting(peerInfoMap.get(myPeerId).getBitFieldPayload())) {
+            if (PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().isInteresting(PeerProcess.peerInfoMap.get(myPeerId).getBitFieldPayload())) {
                 //peerInfoMap.get(connectedPeerId).setInterested(true);
                 System.out.println(myPeerId + " sending interested to " + connectedPeerId);
                 ActualMessage interestedMessage =
                         ActualMessage.ActualMessageBuilder.builder()
                                 .withMessageType(MessageType.INTERESTED.getMessageTypeValue())
                                 .build();
-                clientsMap.get(this.connectedPeerId).sendMessage(interestedMessage);
+                PeerProcess.clientsMap.get(this.connectedPeerId).sendMessage(interestedMessage);
             }
         }
 
         private void sendNotInterestedMessageIfNeeded(Integer peerId) {
-            if (peerInfoMap.get(peerId).getBitFieldPayload().isNotInteresting(peerInfoMap.get(myPeerId).getBitFieldPayload())) {
+            if (PeerProcess.peerInfoMap.get(peerId).getBitFieldPayload().isNotInteresting(PeerProcess.peerInfoMap.get(myPeerId).getBitFieldPayload())) {
                 //peerInfoMap.get(connectedPeerId).setInterested(false);
                 System.out.println(myPeerId + " sending not interested to " + peerId);
                 ActualMessage interestedMessage =
                         ActualMessage.ActualMessageBuilder.builder()
                                 .withMessageType(MessageType.NOTINTERESTED.getMessageTypeValue())
                                 .build();
-                clientsMap.get(peerId).sendMessage(interestedMessage);
+                PeerProcess.clientsMap.get(peerId).sendMessage(interestedMessage);
             }
         }
 
         private void interestedHandler() {
-            peerInfoMap.get(connectedPeerId).setInterested(true);
+            PeerProcess.peerInfoMap.get(connectedPeerId).setInterested(true);
             Log.setInfo("Peer " + myPeerId + " received the ‘interested’ message from " + connectedPeerId);
 
         }
 
         private void notInterestedHandler() {
-            peerInfoMap.get(connectedPeerId).setInterested(false);
+            PeerProcess.peerInfoMap.get(connectedPeerId).setInterested(false);
             Log.setInfo("Peer " + myPeerId + " received the ‘not interested’ message from " + connectedPeerId);
         }
 
         private void chokeHandler() {
-            peerInfoMap.get(connectedPeerId).setHasChoked(true);
+            PeerProcess.peerInfoMap.get(connectedPeerId).setHasChoked(true);
             Log.setInfo("Peer " + myPeerId + " is choked by " + connectedPeerId);
         }
 
         private void unchokeHandler(ActualMessage receivedMsg) {
-            peerInfoMap.get(connectedPeerId).setHasChoked(false);
+            PeerProcess.peerInfoMap.get(connectedPeerId).setHasChoked(false);
             Log.setInfo("Peer " + myPeerId + " is unchoked by " + connectedPeerId);
             //Check if the peer rehas any interesting
-            int interestingField = peerInfoMap.get(connectedPeerId)
-                    .getBitFieldPayload().getInterestingFieldIndex(peerInfoMap.get(myPeerId).getBitFieldPayload());
+            int interestingField = PeerProcess.peerInfoMap.get(connectedPeerId)
+                    .getBitFieldPayload().getInterestingFieldIndex(PeerProcess.peerInfoMap.get(myPeerId).getBitFieldPayload());
 
-            if (!peerInfoMap.get(myPeerId).isHasFile() && interestingField >= 0) {
+            if (!PeerProcess.peerInfoMap.get(myPeerId).isHasFile() && interestingField >= 0) {
                 System.out.println("Requesting Field " + interestingField);
                 //Create Request
                 ActualMessage requestMessage =
@@ -227,8 +221,8 @@ public class Server extends Thread {
                                 .withMessageType(MessageType.REQUEST.getMessageTypeValue())
                                 .withMessagePayload(interestingField)
                                 .build();
-                clientsMap.get(this.connectedPeerId).sendMessage(requestMessage);
-                peerInfoMap.get(connectedPeerId).setRequestedBitIndex(interestingField);
+                PeerProcess.clientsMap.get(this.connectedPeerId).sendMessage(requestMessage);
+                PeerProcess.peerInfoMap.get(connectedPeerId).setRequestedBitIndex(interestingField);
 
             }
         }
@@ -238,10 +232,10 @@ public class Server extends Thread {
             Log.setInfo("Received request from " + connectedPeerId + " to " + myPeerId + " for piece Index " + pieceIndex);
 
             //Sending that piece to piece handler
-            Integer startIndex = pieceIndex * commonConfiguration.getPieceSize();
-            Integer endIndex = Math.min(startIndex + commonConfiguration.getPieceSize() - 1, commonConfiguration.getFileSize() - 1);
+            Integer startIndex = pieceIndex * PeerProcess.commonConfiguration.getPieceSize();
+            Integer endIndex = Math.min(startIndex + PeerProcess.commonConfiguration.getPieceSize() - 1, PeerProcess.commonConfiguration.getFileSize() - 1);
             System.out.println("Sending data from " + startIndex + "to" + endIndex);
-            byte[] requested_data = Arrays.copyOfRange(file, startIndex, endIndex + 1);
+            byte[] requested_data = Arrays.copyOfRange(PeerProcess.file, startIndex, endIndex + 1);
 
             ActualMessage pieceMessage =
                     ActualMessage.ActualMessageBuilder.builder()
@@ -249,36 +243,36 @@ public class Server extends Thread {
                             .withMessagePayload(requested_data)
                             .build();
 
-            clientsMap.get(this.connectedPeerId).sendMessage(pieceMessage);
+            PeerProcess.clientsMap.get(this.connectedPeerId).sendMessage(pieceMessage);
         }
 
         private void haveHandler(ActualMessage receivedMsg) {
             // Update the piece the peer has
-            peerInfoMap.get(connectedPeerId).getBitFieldPayload().setBit((Integer) receivedMsg.getMessagePayload());
-            if (peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
+            PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().setBit((Integer) receivedMsg.getMessagePayload());
+            if (PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
                 System.out.println(connectedPeerId  + " has received the complete file");
-                peerInfoMap.get(connectedPeerId).setHasFile(true);
+                PeerProcess.peerInfoMap.get(connectedPeerId).setHasFile(true);
             }
             Log.setInfo("Peer " + myPeerId + " received 'have' by " + connectedPeerId);
             // Update the isInterested field for the peer.
             sendInterestedMessageIfNeeded();
             // Also see if all the peers have received all chunks of the file, if yes, then terminate the process.
-            if (peerInfoMap.get(myPeerId).isHasFile() &&
-                    peerInfoMap.values().stream().map(PeerInfo::isHasFile).reduce(true, (x, y) -> x && y)) {
+            if (PeerProcess.peerInfoMap.get(myPeerId).isHasFile() &&
+                    PeerProcess.peerInfoMap.values().stream().map(PeerInfo::isHasFile).reduce(true, (x, y) -> x && y)) {
                 terminate();
             }
         }
 
         private void pieceHandler(ActualMessage receivedMsg) {
-            PeerInfo connectedPeerInfo = peerInfoMap.get(connectedPeerId);
-            PeerInfo myInfo = peerInfoMap.get(myPeerId);
+            PeerInfo connectedPeerInfo = PeerProcess.peerInfoMap.get(connectedPeerId);
+            PeerInfo myInfo = PeerProcess.peerInfoMap.get(myPeerId);
             //Copy the contents of the payload only if not already received from another peer
             if (!myInfo.getBitFieldPayload().hasBitIndex(connectedPeerInfo.getRequestedBitIndex()).get()) {
 
                 byte[] newPayloadArray = (byte[]) receivedMsg.getMessagePayload();
-                downloadRates.addPeerDownloadDetails(connectedPeerId, newPayloadArray.length);
-                int destStartIndex = connectedPeerInfo.getRequestedBitIndex() * commonConfiguration.getPieceSize();
-                System.arraycopy(newPayloadArray, 0, file, destStartIndex, newPayloadArray.length);
+                PeerProcess.downloadRates.addPeerDownloadDetails(connectedPeerId, newPayloadArray.length);
+                int destStartIndex = connectedPeerInfo.getRequestedBitIndex() * PeerProcess.commonConfiguration.getPieceSize();
+                System.arraycopy(newPayloadArray, 0, PeerProcess.file, destStartIndex, newPayloadArray.length);
                 //Update my bitfield.
                 myInfo.getBitFieldPayload().setBit(connectedPeerInfo.getRequestedBitIndex());
                 //Update no of pieces counter to print in log file.
@@ -287,9 +281,9 @@ public class Server extends Thread {
                         + connectedPeerInfo.getRequestedBitIndex() + " from "
                         + connectedPeerId + ". Now the number of pieces it has is " + myInfo.getBitFieldPayload().haveBitsCount() + ".");
                 // Now the peer will send HAVE message to other peers and not un interested messages if needed
-                ActualMessage msg = HAVE_MESSAGE_UNBUILT.withMessagePayload(connectedPeerInfo.getRequestedBitIndex()).build();
-                peerInfoMap.keySet().stream().filter(x -> !x.equals(myPeerId) && clientsMap.containsKey(x)).forEach(y -> {
-                    clientsMap.get(y).sendMessage(msg);
+                ActualMessage msg = PeerProcess.HAVE_MESSAGE_UNBUILT.withMessagePayload(connectedPeerInfo.getRequestedBitIndex()).build();
+                PeerProcess.peerInfoMap.keySet().stream().filter(x -> !x.equals(myPeerId) && PeerProcess.clientsMap.containsKey(x)).forEach(y -> {
+                    PeerProcess.clientsMap.get(y).sendMessage(msg);
                     sendNotInterestedMessageIfNeeded(y);
                 });
 
@@ -304,17 +298,18 @@ public class Server extends Thread {
                 // Send notInterested message to other peers if needed
 //                peerInfoMap.keySet().stream().filter(x -> !x.equals(myPeerId)).forEach(this::sendNotInterestedMessageIfNeeded);
 
-                Path path = Paths.get("./bittorrent/RECEIVED_FILE_" + myPeerId + ".pdf");
+                //Path path = Paths.get("../RECEIVED_FILE_" + myPeerId + ".pdf");
+                Path path = Paths.get(PeerProcess.commonConfiguration.getFileName());
                 try {
-                    Files.write(path, file);
+                    Files.write(path, PeerProcess.file);
                     myInfo.setHasFile(true);
                     fileWritten = true;
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     // Also see if all the peers have received all chunks of the file, if yes, then terminate the process.
-                    if (peerInfoMap.get(myPeerId).isHasFile() &&
-                            peerInfoMap.values().stream().map(PeerInfo::isHasFile).reduce(true, (x, y) -> x && y)) {
+                    if (PeerProcess.peerInfoMap.get(myPeerId).isHasFile() &&
+                            PeerProcess.peerInfoMap.values().stream().map(PeerInfo::isHasFile).reduce(true, (x, y) -> x && y)) {
                         terminate();
                     }
                 }
@@ -331,7 +326,7 @@ public class Server extends Thread {
                                     .withMessageType(MessageType.REQUEST.getMessageTypeValue())
                                     .withMessagePayload(interestingField)
                                     .build();
-                    clientsMap.get(connectedPeerId).sendMessage(requestMessage);
+                    PeerProcess.clientsMap.get(connectedPeerId).sendMessage(requestMessage);
                     connectedPeerInfo.setRequestedBitIndex(interestingField);
                 }
             }

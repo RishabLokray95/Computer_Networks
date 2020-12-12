@@ -1,9 +1,4 @@
-package com.group2;
-import com.group2.model.PeerInfo;
-
 import java.io.IOException;
-import java.time.DateTimeException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.FileHandler;
@@ -24,8 +19,8 @@ public class Log {
         try {
             fileHandler = new FileHandler("./log_file_" + myPeerId + ".log");
             LOGGER.addHandler(fileHandler);
-            fileHandler.setLevel(Level.ALL);
-            LOGGER.setLevel(Level.ALL);
+            fileHandler.setLevel(Level.INFO);
+            LOGGER.setLevel(Level.INFO);
             Formatter simpleFormatter = new SimpleFormatter();
             fileHandler.setFormatter(simpleFormatter);
         } catch (IOException e) {

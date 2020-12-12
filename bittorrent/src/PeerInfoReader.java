@@ -1,12 +1,6 @@
-package com.group2;
-
-import com.group2.model.PeerInfo;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.group2.constants.Constants.PEER_INFO_CFG;
 
 public final class PeerInfoReader {
 
@@ -15,7 +9,7 @@ public final class PeerInfoReader {
         Integer bitFieldSize = ((Double) Math.ceil(
                 PeerProcess.commonConfiguration.getFileSize() /
                         (PeerProcess.commonConfiguration.getPieceSize() * 1.0D))).intValue();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(PEER_INFO_CFG)))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(Constants.PEER_INFO_CFG)))) {
             while (reader.ready()) {
                 String line = reader.readLine();
                 String[] data = line.split(" ");
@@ -27,7 +21,7 @@ public final class PeerInfoReader {
                 peers.add(peerInfo);
             }
         } catch (FileNotFoundException e) {
-            System.out.println("File not found. File name : " + PEER_INFO_CFG + " . Exception : " + e.getMessage());
+            System.out.println("File not found. File name : " + Constants.PEER_INFO_CFG + " . Exception : " + e.getMessage());
         } catch (IOException e) {
             System.out.println("IO Exception. Exception : " + e.getMessage());
         }

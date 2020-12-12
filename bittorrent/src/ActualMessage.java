@@ -1,6 +1,5 @@
-package com.group2.model;
-
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ActualMessage implements Serializable {
     private Integer messageLength;
@@ -13,7 +12,7 @@ public class ActualMessage implements Serializable {
         this.messageLength = 1 + getMessagePayloadLength(messageType, messagePayload);
     }
 
-    public static Integer getMessagePayloadLength(Byte messageType, Object messagePayload) {
+    private static Integer getMessagePayloadLength(Byte messageType, Object messagePayload) {
         switch (messageType) {
             case 0: // CHOKE
             case 1: // UNCHOKE
@@ -24,6 +23,7 @@ public class ActualMessage implements Serializable {
             case 4: // HAVE
                 return Integer.BYTES;
             case 5: // BITFIELD
+                return ((BitField) messagePayload).getBitField().length;
             case 7: // PIECE
                 return ((byte[]) messagePayload).length;
             default:
