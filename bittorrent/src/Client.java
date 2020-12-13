@@ -64,7 +64,7 @@ public class Client {
             out.writeObject(msg);
             out.flush();
         } catch (IOException ioException) {
-            Log.setInfo("Peer" + myPeerInfo + " could not make a connection to Peer" + peerInfo.getPeerId() + ".");
+            Log.setInfo("Peer" + myPeerInfo.getPeerId() + " could not make a connection to Peer" + peerInfo.getPeerId() + ".");
             ioException.printStackTrace();
         }
     }

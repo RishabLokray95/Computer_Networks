@@ -28,6 +28,7 @@ public class PeerProcess {
             ActualMessage.ActualMessageBuilder.builder()
                     .withMessageType(MessageType.HAVE.getMessageTypeValue());
     public static byte[] file;
+    public static boolean shutdown = false;
 
     public static void main(String[] args) throws Exception {
         if(args.length < 1) {

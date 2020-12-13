@@ -11,6 +11,10 @@ public class OptimisticUnchoke implements Runnable {
 
     @Override
     public void run() {
+        if (PeerProcess.shutdown) {
+            Thread.currentThread().interrupt();
+            return;
+        }
         Set<Integer> interestedPeers = PeerProcess.peerInfoMap
                 .keySet()
                 .stream()

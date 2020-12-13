@@ -13,6 +13,10 @@ public class PreferredUnchoke implements Runnable {
 
     @Override
     public void run() {
+        if (PeerProcess.shutdown) {
+            Thread.currentThread().interrupt();
+            return;
+        }
         // calculate new preferred list
         Log.setInfo("Unchoking neighbors, updating preferred neighbors");
         this.newNeighbours();

@@ -74,7 +74,7 @@ public class Server extends Thread {
                         message = in.readObject();
                         //show the message to the user
                         handleMessage(message);
-                        //Thread.sleep(5000);
+                        //Thread.sleep(1000);
                     }
                 } catch (ClassNotFoundException classnot) {
                     Log.setInfo("Data received in unknown format");
@@ -166,6 +166,7 @@ public class Server extends Thread {
                 PeerProcess.peerInfoMap.get(connectedPeerId).setHasFile(true);
                 PeerProcess.peerInfoMap.get(connectedPeerId).setInterested(false);
             }
+            Log.setInfo("Peer " + myPeerId + " received the 'bitfield' message from " + connectedPeerId+".");
 //            System.out.println("Bitfiled has been set");
             //Check with own Bitfield and send interested if peer has any interesting pieces
             sendInterestedMessageIfNeeded();
@@ -258,10 +259,12 @@ public class Server extends Thread {
                     receivedMsg.getMessagePayload()+".");
 
             PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().setBit((Integer) receivedMsg.getMessagePayload());
+            Log.setInfo("Peer " + myPeerId +  " set the bitfield index "+ receivedMsg.getMessagePayload()
+                    + " to 1 for the peer "+ connectedPeerId+".");
             if (PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
 
                 //System.out.println(connectedPeerId  + " has received the complete file");
-                Log.setInfo("Peer " + connectedPeerId + " has downloaded the complete file.");
+                Log.setInfo("Peer " + connectedPeerId + " has the complete file.");
 
                 PeerProcess.peerInfoMap.get(connectedPeerId).setHasFile(true);
             }
@@ -345,8 +348,9 @@ public class Server extends Thread {
         }
 
         private void terminate() {
+            PeerProcess.shutdown = true;
             try {
-                Thread.sleep(11000);
+                Thread.sleep(4000);
                 Log.setInfo("Shut down now since all the peers have file");
                 System.exit(0);
             } catch (InterruptedException ex) {
