@@ -28,9 +28,9 @@ public class Client {
 
     public void sendHandshakeRequest() {
         try {
-            if (requestSocket == null) {
+            //if (requestSocket == null) {
                 requestSocket = new Socket(peerInfo.getHost(), peerInfo.getPort());
-            }
+            //}
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(requestSocket.getInputStream());

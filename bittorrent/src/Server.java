@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class Server extends Thread {
 
@@ -43,7 +44,7 @@ public class Server extends Thread {
      * loop and are responsible for dealing with a single client's requests.
      */
     private static class Handler extends Thread {
-        private Object message;    //message received from the client
+        //message received from the client
         private Socket connection;
         private ObjectInputStream in;    //stream read from the socket
         private ObjectOutputStream out;    //stream write to the socket
@@ -71,16 +72,17 @@ public class Server extends Thread {
                 try {
                     while (true) {
                         //receive the message sent from the client
-                        message = in.readObject();
+                        Object message = in.readObject();
                         //show the message to the user
                         handleMessage(message);
-                        //Thread.sleep(1000);
+                        Thread.sleep(250);
                     }
                 } catch (ClassNotFoundException classnot) {
                     Log.setInfo("Data received in unknown format");
                 }
             } catch (Exception ioException) {
-                Log.setInfo("Disconnect with Client " + connection.getInetAddress() + " Exception : " + ioException.getMessage());
+                //Log.setInfo("Disconnect with Client " + connection.getInetAddress() + " Exception : " + ioException.getMessage());
+                //Log.setInfo(" Stacktrace :" + Arrays.stream(ioException.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining("\n")));
             } finally {
                 //Close connections
                 try {
@@ -161,12 +163,12 @@ public class Server extends Thread {
         private void bitFieldHandler(ActualMessage receivedMsg) {
             PeerProcess.peerInfoMap.get(this.connectedPeerId).getBitFieldPayload().setBit(
                     ((BitField) receivedMsg.getMessagePayload()).getBitField());
-            if(PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
+            if (PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
 //                System.out.println("Setting 'has file' to true for peer" + connectedPeerId);
                 PeerProcess.peerInfoMap.get(connectedPeerId).setHasFile(true);
                 PeerProcess.peerInfoMap.get(connectedPeerId).setInterested(false);
             }
-            Log.setInfo("Peer " + myPeerId + " received the 'bitfield' message from " + connectedPeerId+".");
+            Log.setInfo("Peer " + myPeerId + " received the 'bitfield' message from " + connectedPeerId + ".");
 //            System.out.println("Bitfiled has been set");
             //Check with own Bitfield and send interested if peer has any interesting pieces
             sendInterestedMessageIfNeeded();
@@ -199,13 +201,13 @@ public class Server extends Thread {
 
         private void interestedHandler() {
             PeerProcess.peerInfoMap.get(connectedPeerId).setInterested(true);
-            Log.setInfo("Peer " + myPeerId + " received the 'interested' message from " + connectedPeerId+".");
+            Log.setInfo("Peer " + myPeerId + " received the 'interested' message from " + connectedPeerId + ".");
 
         }
 
         private void notInterestedHandler() {
             PeerProcess.peerInfoMap.get(connectedPeerId).setInterested(false);
-            Log.setInfo("Peer " + myPeerId + " received the 'not interested' message from " + connectedPeerId+".");
+            Log.setInfo("Peer " + myPeerId + " received the 'not interested' message from " + connectedPeerId + ".");
         }
 
         private void chokeHandler() {
@@ -254,27 +256,31 @@ public class Server extends Thread {
         }
 
         private void haveHandler(ActualMessage receivedMsg) {
-            // Update the piece the peer has
-            Log.setInfo("Peer " + myPeerId + " received the 'have' message from " + connectedPeerId + " for the piece " +
-                    receivedMsg.getMessagePayload()+".");
-
-            PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().setBit((Integer) receivedMsg.getMessagePayload());
-            Log.setInfo("Peer " + myPeerId +  " set the bitfield index "+ receivedMsg.getMessagePayload()
-                    + " to 1 for the peer "+ connectedPeerId+".");
-            if (PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
-
-                //System.out.println(connectedPeerId  + " has received the complete file");
-                Log.setInfo("Peer " + connectedPeerId + " has the complete file.");
-
-                PeerProcess.peerInfoMap.get(connectedPeerId).setHasFile(true);
-            }
-
-            // Update the isInterested field for the peer.
-            sendInterestedMessageIfNeeded();
-            // Also see if all the peers have received all chunks of the file, if yes, then terminate the process.
-            if (PeerProcess.peerInfoMap.get(myPeerId).isHasFile() &&
-                    PeerProcess.peerInfoMap.values().stream().map(PeerInfo::isHasFile).reduce(true, (x, y) -> x && y)) {
+            if ((Integer) receivedMsg.getMessagePayload() == -1) {
                 terminate();
+            } else {
+                // Update the piece the peer has
+                Log.setInfo("Peer " + myPeerId + " received the 'have' message from " + connectedPeerId + " for the piece " +
+                        receivedMsg.getMessagePayload() + ".");
+
+                PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().setBit((Integer) receivedMsg.getMessagePayload());
+                Log.setInfo("Peer " + myPeerId + " set the bitfield index " + receivedMsg.getMessagePayload()
+                        + " to 1 for the peer " + connectedPeerId + ".");
+                if (PeerProcess.peerInfoMap.get(connectedPeerId).getBitFieldPayload().allBitSet()) {
+
+                    //System.out.println(connectedPeerId  + " has received the complete file");
+                    Log.setInfo("Peer " + connectedPeerId + " has the complete file.");
+
+                    PeerProcess.peerInfoMap.get(connectedPeerId).setHasFile(true);
+                }
+
+                // Update the isInterested field for the peer.
+                sendInterestedMessageIfNeeded();
+                // Also see if all the peers have received all chunks of the file, if yes, then terminate the process.
+                if (PeerProcess.peerInfoMap.get(myPeerId).isHasFile() &&
+                        PeerProcess.peerInfoMap.values().stream().map(PeerInfo::isHasFile).reduce(true, (x, y) -> x && y)) {
+                    terminate();
+                }
             }
         }
 
@@ -349,6 +355,16 @@ public class Server extends Thread {
 
         private void terminate() {
             PeerProcess.shutdown = true;
+            ActualMessage msg = PeerProcess.HAVE_MESSAGE_UNBUILT.withMessagePayload(-1).build();
+            for (Integer x : PeerProcess.peerInfoMap.keySet()) {
+                if (!x.equals(myPeerId) && PeerProcess.clientsMap.containsKey(x)) {
+                    try {
+                        PeerProcess.clientsMap.get(x).sendMessage(msg);
+                    } catch (Exception e) {
+                        //
+                    }
+                }
+            }
             try {
                 Thread.sleep(4000);
                 Log.setInfo("Shut down now since all the peers have file");
